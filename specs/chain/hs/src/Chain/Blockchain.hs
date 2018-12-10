@@ -37,11 +37,13 @@ hashBlock b@(GBlock{}) = gbHash b
 
 -- | Computes the block size in bytes
 bSize :: Block -> Natural
-bSize = undefined
+bSize b@(GBlock{}) = gbSize b
+bSize b@(RBlock{}) = rbSize b
 
 -- | Computes the block header size in bytes
 bHeaderSize :: Block -> Natural
-bHeaderSize = undefined
+bHeaderSize b@(GBlock{}) = gbHeaderSize b
+bHeaderSize b@(RBlock{}) = rbHeaderSize b
 
 -- | The 't' parameter in K * t in the range 0.2 <= t <= 0.25
 -- that limits the number of blocks a signer can signed in a

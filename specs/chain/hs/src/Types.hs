@@ -36,6 +36,8 @@ data Block
   = GBlock {
       gbKeys :: Set VKeyGen
     , gbHash :: Hash -- ^ Hash of itself
+    , gbSize :: Natural -- ^ Size of the genesis block
+    , gbHeaderSize :: Natural -- ^ Size of the header of the genesis block
     }
   -- a non-genesis block
   | RBlock {
@@ -50,4 +52,6 @@ data Block
       -- to the @verify@ function type-check on the body data of a block
     , rbSig    :: Sig Hash -- ^ Cryptographic signature of the block
     , rbIsEBB  :: Bool -- ^ Indicates if this is an epoch boundary block
+    , rbSize   :: Natural -- ^ Size of the block
+    , rbHeaderSize :: Natural -- ^ Size of the header of the block
     }
