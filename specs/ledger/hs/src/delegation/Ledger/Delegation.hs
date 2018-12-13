@@ -1,15 +1,18 @@
-{-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeApplications          #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+
 module Ledger.Delegation where
 
 import Control.Lens
 import Control.State.Transition
 import Ledger.Signatures
 import Ledger.Core
+import Control.Lens (makeLenses, makeFields)
+import Ledger.Core (VKey, Epoch, Sig, Slot, SlotCount)
 import Numeric.Natural (Natural)
 import qualified Data.List as List
 import Data.Set (Set)
