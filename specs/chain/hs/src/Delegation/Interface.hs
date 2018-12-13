@@ -17,7 +17,7 @@ import Data.Maybe (fromJust, listToMaybe)
 import qualified Data.Map.Strict as Map
 import Data.Set (Set)
 import Ledger.Core (VKey, Slot)
-import Ledger.Delegation (DCert, DIState, VKeyGen, delegationMap)
+import Ledger.Delegation (DCert, DIState, VKeyGen, DELEG, DSEnv, delegationMap)
 import Types
 
 
@@ -47,11 +47,11 @@ initDIState :: DIState
 initDIState = initDIStateFromKeys initVKeys
 
 -- | Defines when new certificates can be added to the ledger's state
-newCertsRule :: TransitionRule Interf
+newCertsRule :: TransitionRule DELEG
 newCertsRule = undefined
 
 -- | Updates the delegation interface state with a set of heavyweight
 -- delegation certificates that arrived in a block issued in the given
 -- slot
-updateCerts :: Slot -> Set DCert -> DIState -> DIState
+updateCerts :: DSEnv -> [DCert] -> DIState -> DIState
 updateCerts = undefined

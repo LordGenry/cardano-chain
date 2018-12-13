@@ -20,11 +20,10 @@ import Data.Queue
 import Delegation.Interface
   (delegates, maybeMapKeyForValue, mapKeyForValue, initDIState, newCertsRule, updateCerts)
 import Ledger.Core (VKey(..), Slot, SlotCount(SlotCount), verify)
-import Ledger.Delegation (DCert, DIState, VKeyGen)
+import Ledger.Delegation (DCert, DIState, VKeyGen, DELEG, DSEnv)
 import Ledger.Signatures (Hash)
 import Types
-  ( Interf
-  , BC
+  ( BC
   , Block(..)
   , BlockIx(..)
   , ProtParams(..)
@@ -56,18 +55,6 @@ newtype T = MkT Double deriving (Eq, Ord)
 type KeyToQMap = Map.Map VKeyGen (Queue BlockIx)
 
 
-instance STS Interf where
-  type State Interf = DIState
-  type Signal Interf = Set DCert
-  type Environment Interf = Slot
-  data PredicateFailure Interf
-    = ConflictWithExistingCerts
-    | InvalidNewCertificates
-    deriving (Eq, Show)
-
-  initialRules = []
-  transitionRules = [newCertsRule]
-
 -- | Remove the oldest entry in the queues in the range of the map if it is
 --   more than *K* blocks away from the given block index
 trimIx :: KeyToQMap -> SlotCount -> BlockIx -> KeyToQMap
@@ -89,7 +76,7 @@ incIxMap ix = Map.adjust (pushQueue ix)
 data BlockchainEnv = MkBlockChainEnv
   {
     bcEnvPp :: ProtParams
-  , bcEnvSl :: Slot
+  , bcEnvSl :: DSEnv
   , bcEnvK :: SlotCount
   , bcEnvT :: T
   }
@@ -116,8 +103,8 @@ instance STS BC where
   -- | Transitions in the system are triggered by a new block
   type Signal BC = Block
   -- | The environment consists of K and t parameters. To support a state
-  -- transition subsystem, the environment also includes the slot of the
-  -- block to be added.
+  -- transition subsystem, the environment also includes the environment of the
+  -- subsystem.
   type Environment BC = BlockchainEnv
   data PredicateFailure BC
     = InvalidPredecessor
@@ -126,7 +113,7 @@ instance STS BC where
     | InvalidBlockSize
     | InvalidHeaderSize
     | SignedMaximumNumberBlocks
-    | LedgerFailure (PredicateFailure Interf)
+    | LedgerFailure (PredicateFailure DELEG)
     deriving (Eq, Show)
 
   -- There are only two inference rules: 1) for the initial state and 2) for
@@ -141,7 +128,7 @@ instance STS BC where
         hasRight jc ?! NoDelegationRight
         validSignature jc ?! InvalidBlockSignature
         lessThanLimitSigned jc
-        _ <- trans @Interf $ TRC (proj jc)
+        _ <- trans @DELEG $ TRC (proj jc)
         return $ extendChain jc
     ]
     where
@@ -182,5 +169,5 @@ instance STS BC where
               ?! SignedMaximumNumberBlocks
       proj (env, (_, _, d), b@(RBlock {})) = (bcEnvSl env, d, rbCerts b)
 
-instance Embed Interf BC where
+instance Embed DELEG BC where
   wrapFailed = LedgerFailure
