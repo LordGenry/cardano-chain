@@ -54,3 +54,14 @@ To test run:
 ```sh
 nix-shell --pure --run "runhaskell Setup.hs test"
 ```
+
+### Development
+
+For re-compiling on change of the files under development, you can use:
+
+```haskell
+nix-shell --pure --run "ghcid -c  \"cabal new-repl some-pkg\""
+```
+
+TODO: describe the packages that are present here (what `some-pkg` can be
+instantiated to).
