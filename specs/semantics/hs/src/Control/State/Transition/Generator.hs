@@ -85,8 +85,8 @@ stsStepGen sigGen = do
   signal <- sigGen
   -- We attempt to apply all (non-base) rules
   let
-    jc :: JudgmentContext s
-    jc = (env, st, signal)
+    jc :: TRC s
+    jc = TRC (env, st, signal)
     (passed, failed) = partition (null . snd)
       $ applyRuleIndifferently @s jc <$> transitionRules
   st' <- case passed of
