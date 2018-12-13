@@ -1,25 +1,38 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeApplications          #-}
-{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Ledger.Delegation where
+module Ledger.Delegation
+  ()
+where
 
-import Control.Lens
 import Control.State.Transition
-import Ledger.Signatures
-import Ledger.Core
-import Control.Lens (makeLenses, makeFields)
-import Ledger.Core (VKey, Epoch, Sig, Slot, SlotCount)
+  ( STS
+  , PredicateFailure
+  , Embed
+  , Environment
+  , initialRules
+  , transitionRules
+  , TRC(TRC)
+  , Signal
+  , State
+  , (?!)
+  , judgmentContext
+  , trans
+  , wrapFailed
+  )
+import Control.Lens
+  (makeLenses, makeFields, Lens', (^.), lens, (&), (.~), _1, (<>~), (%~), to)
+import Ledger.Core (VKey, Epoch, Sig, Slot, SlotCount, (⨃), minusSlot, addSlot)
 import Numeric.Natural (Natural)
 import qualified Data.List as List
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
-
 --------------------------------------------------------------------------------
 -- Abstract types
 --------------------------------------------------------------------------------
