@@ -5,7 +5,6 @@ module Delegation.Interface
   , maybeMapKeyForValue
   , mapKeyForValue
   , initDIState
-  , newCertsRule
   , updateCerts
   )
 where
@@ -45,10 +44,6 @@ initDIStateFromKeys certs = undefined
 -- | The initial delegation interface state
 initDIState :: DIState
 initDIState = initDIStateFromKeys initVKeys
-
--- | Defines when new certificates can be added to the ledger's state
-newCertsRule :: TransitionRule DELEG
-newCertsRule = undefined
 
 -- | Updates the delegation interface state with a set of heavyweight
 -- delegation certificates that arrived in a block issued in the given

@@ -247,6 +247,24 @@ instance Embed ADELEG ADELEGS where
 -- | Delegation interface
 data DELEG
 
+-- TODO(md): figure out the type for updateCertificates. Probably it has to
+-- have a result in a free monad, but then I'm not sure how will I invoke This
+-- function from Blockchain.hs:95, where it should replace a call to
+-- 'updateCerts dienv (rbCerts b) ds'. Maybe I can simply use pure to lift.
+-- To unlift, I saw there is a function in Control.Monad.Free.Church.
+updateCertificates :: Environment DELEG -> State DELEG -> Signal DELEG -> State DELEG
+updateCertificates env st sig = undefined
+combineSubstates :: Environment DELEG -> State ADELEGS -> State SDELEGS -> State DELEG
+combineSubstates env dms sds = DIState
+  (dms ^. delegationMap)
+  (dms ^. lastDelegation)
+  (filter (aboutSlot (env ^. slot) (env ^. liveness) . fst)
+    $ sds ^. scheduledDelegations)
+  (Set.filter ((< (env ^. epoch)) . fst)
+    $ sds ^. keyEpochDelegations)
+aboutSlot :: Slot -> SlotCount -> (Slot -> Bool)
+aboutSlot a b c = c >= (a `minusSlot` b) && c <= (a `addSlot` b)
+
 instance STS DELEG where
   type State DELEG = DIState
   type Signal DELEG = [DCert]
@@ -260,21 +278,15 @@ instance STS DELEG where
   initialRules = []
   transitionRules =
     [ do
+        -- TODO(md): this has to be made a top-level definition so it can be
+        -- invoked from Blockchain.hs.
         TRC (env, st, sig) <- judgmentContext
         sds <- trans @SDELEGS $ TRC (env, st ^. dIStateDSState, sig)
         let slots = filter ((< (env ^. slot)) . fst) $ sds ^. scheduledDelegations
         dms <- trans @ADELEGS $ TRC ((), st ^. dIStateDState, slots)
-        return $ DIState
-          (dms ^. delegationMap)
-          (dms ^. lastDelegation)
-          (filter (aboutSlot (env ^. slot) (env ^. liveness) . fst)
-            $ sds ^. scheduledDelegations)
-          (Set.filter ((< (env ^. epoch)) . fst)
-            $ sds ^. keyEpochDelegations)
+        return $ combineSubstates env dms sds
     ]
-    where
-      aboutSlot :: Slot -> SlotCount -> (Slot -> Bool)
-      aboutSlot a b c = c >= (a `minusSlot` b) && c <= (a `addSlot` b)
+
 
 instance Embed SDELEGS DELEG where
   wrapFailed = SDelegSFailure

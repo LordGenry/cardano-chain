@@ -18,7 +18,7 @@ import Chain.GenesisBlock (genesisBlock)
 import Control.State.Transition
 import Data.Queue
 import Delegation.Interface
-  (delegates, maybeMapKeyForValue, mapKeyForValue, initDIState, newCertsRule, updateCerts)
+  (delegates, maybeMapKeyForValue, mapKeyForValue, initDIState, updateCerts)
 import Ledger.Core (VKey(..), Slot, SlotCount(SlotCount), verify)
 import Ledger.Delegation (DCert, DIState, VKeyGen, DELEG, DSEnv)
 import Ledger.Signatures (Hash)
@@ -75,24 +75,24 @@ incIxMap ix = Map.adjust (pushQueue ix)
 -- | Environment for blockchain rules
 data BlockchainEnv = MkBlockChainEnv
   {
-    bcEnvPp :: ProtParams
-  , bcEnvSl :: DSEnv
-  , bcEnvK :: SlotCount
-  , bcEnvT :: T
+    bcEnvPp    :: ProtParams
+  , bcEnvDIEnv :: DSEnv
+  , bcEnvK     :: SlotCount
+  , bcEnvT     :: T
   }
 
 -- | Extends a chain by a block
 extendChain :: (Environment BC, State BC, Signal BC) -> State BC
 extendChain (env, st, b@(RBlock{})) =
   let
-    p'          = b
-    (sl, k, t ) = (bcEnvSl env, bcEnvK env, bcEnvT env)
-    (m , p, ds) = st
-    vk_d        = rbSigner b
-    ix          = rbIx b
-    vk_s        = mapKeyForValue vk_d . delegates $ ds
-    m'          = incIxMap ix vk_s (trimIx m k ix)
-    ds'         = updateCerts sl (rbCerts b) ds
+    p'             = b
+    (dienv, k, t ) = (bcEnvDIEnv env, bcEnvK env, bcEnvT env)
+    (m , p, ds)    = st
+    vk_d           = rbSigner b
+    ix             = rbIx b
+    vk_s           = mapKeyForValue vk_d . delegates $ ds
+    m'             = incIxMap ix vk_s (trimIx m k ix)
+    ds'            = updateCerts dienv (rbCerts b) ds
   in (m', p', ds')
 
 instance STS BC where
@@ -167,7 +167,7 @@ instance STS BC where
           Just vk_s ->
             fromIntegral (sizeQueue (m Map.! vk_s)) <= (fromIntegral k) * t
               ?! SignedMaximumNumberBlocks
-      proj (env, (_, _, d), b@(RBlock {})) = (bcEnvSl env, d, rbCerts b)
+      proj (env, (_, _, d), b@(RBlock {})) = (bcEnvDIEnv env, d, rbCerts b)
 
 instance Embed DELEG BC where
   wrapFailed = LedgerFailure
